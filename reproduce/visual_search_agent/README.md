@@ -1,6 +1,29 @@
 # 全参数 SFT 训练
+## 安装依赖
+
+先在训练使用的 Python 环境中安装依赖：
+
+```bash
+cd code/SFT
+pip install -e ".[torch,metrics,deepspeed,ray]"
+pip install qwen-vl-utils pillow av decord torchvision flash-attn
+```
+
+`code` 替换为实际下载的仓库目录。例如：
+
+```bash
+cd /root/test/OpenSearch-VL-Training/SFT
+```
+
+安装完成后，回到仓库根目录，再执行下面的训练命令：
+
+```bash
+cd ..
+```
+
 
 使用框架已安装的 Python 环境，在 OpenSearch-VL 仓库目录执行：
+
 
 ```bash
 python reproduce/visual_search_agent/run.py train \
