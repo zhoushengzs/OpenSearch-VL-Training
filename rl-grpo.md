@@ -165,21 +165,9 @@ then
 fi
 ```
 
-## 6. 处理图片计算和内部服务的代码兼容问题
+## 6. 检查代码和内部服务
 
-复制的是当前修复后的完整项目时，跳过应用补丁。只有使用未修复的原代码时执行；需要同时带上 `.codex/reproduction_20261028/` 中的补丁文件：
-
-```bash
-cd "$GRPO_PROJECT_ROOT"
-GRPO_FIX_PATCH="$GRPO_PROJECT_ROOT/train/OpenSearch-VL-Training/.codex/reproduction_20261028/GRPO修复补丁_20261028.patch"
-
-# 检查通过后才应用；不通过时不要强行覆盖。
-git apply --check "$GRPO_FIX_PATCH" && git apply "$GRPO_FIX_PATCH"
-```
-
-这份补丁包含按显卡选择图片计算方式、适配 Uvicorn 服务启动，以及训练脚本的配套修复，不需要更换 Uvicorn 版本。
-
-检查修复后的代码和服务：
+下面三条命令分别检查训练批数与保存安排、显卡计算方式选择、内部服务启动。只检查，不修改代码，也不开始训练。
 
 ```bash
 cd "$GRPO_PROJECT_ROOT/train/OpenSearch-VL-Training/RL/rllm"
