@@ -18,6 +18,11 @@ PPO_RAY_RUNTIME_ENV = {
 }
 
 FORWARD_PREFIXES = [
+    "LD_LIBRARY_PATH",
+    "NVTE_",
+    "SERP_",
+    "SERPER_",
+    "JUDGE_",
     "VLLM_",
     "SGL_",
     "SGLANG_",

@@ -21,6 +21,8 @@ from typing import Any, Dict, Optional, Tuple
 import requests
 from PIL import Image
 
+from vision_deepresearch_async_workflow.tools.serper_keys import configured_keys, serper_post
+
 from vision_deepresearch_async_workflow.tools.shared import (
     DeepResearchTool,
     get_cache_async,
@@ -650,7 +652,7 @@ class TextSearchTool(DeepResearchTool):
             return "Error: 'q' or 'query' parameter is required"
 
         proxies = self._get_requests_proxies()
-        use_gateway = bool(API_USER and API_KEY)
+        use_gateway = bool(API_USER and API_KEY) and not bool(os.getenv("SERPER_API_KEYS"))
 
         # Step 1 – Serper search
         if use_gateway:
@@ -668,7 +670,7 @@ class TextSearchTool(DeepResearchTool):
 
         try:
             def _do_search():
-                return requests.post(search_url, headers=headers, json=payload, timeout=60, proxies=proxies)
+                return serper_post(search_url, headers=headers, json=payload, timeout=60, proxies=proxies)
 
             resp = await run_with_retries_async(_do_search, executor=self.executor)
             if resp.status_code != 200:
@@ -742,7 +744,7 @@ class WebSearchTool(DeepResearchTool):
             return "Error: 'q' parameter is required"
 
         proxies = self._get_requests_proxies()
-        use_gateway = bool(API_USER and API_KEY)
+        use_gateway = bool(API_USER and API_KEY) and not bool(os.getenv("SERPER_API_KEYS"))
 
         if use_gateway:
             headers = {
@@ -759,7 +761,7 @@ class WebSearchTool(DeepResearchTool):
 
         try:
             def _do():
-                return requests.post(url, headers=headers, json=payload, timeout=60, proxies=proxies)
+                return serper_post(url, headers=headers, json=payload, timeout=60, proxies=proxies)
 
             resp = await run_with_retries_async(_do, executor=self.executor)
             if resp.status_code != 200:

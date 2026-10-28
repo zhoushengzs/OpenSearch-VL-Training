@@ -348,6 +348,8 @@ class RewardDeepResearchFn:
                         # "temperature": 0.1,
                         "max_tokens": 800,
                     }
+                    if os.getenv("JUDGE_THINKING") in ("enabled", "disabled"):
+                        payload["thinking"] = {"type": os.environ["JUDGE_THINKING"]}
                     headers = {"Content-Type": "application/json"}
                     attempt_counter: dict[str, int] = {"value": 0}
                     proxies_state = "enabled" if self._judge_proxies else "disabled"
@@ -516,6 +518,8 @@ class RewardDeepResearchFn:
                             "temperature": 0.1,
                             "max_tokens": 800,
                         }
+                        if os.getenv("JUDGE_THINKING") in ("enabled", "disabled"):
+                            payload["thinking"] = {"type": os.environ["JUDGE_THINKING"]}
                         _print_debug(
                             "Judge/OpenAI/Request",
                             attempt=judge_attempts,

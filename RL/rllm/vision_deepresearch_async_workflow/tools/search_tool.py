@@ -2,6 +2,8 @@ import asyncio
 import json
 import os
 
+from vision_deepresearch_async_workflow.tools.serper_keys import configured_keys, serper_post
+
 from vision_deepresearch_async_workflow.tools.shared import (
     DeepResearchTool,
     get_cache_async,
@@ -35,7 +37,7 @@ class SearchTool(DeepResearchTool):
             },
         )
         self.zhipu_api_key = os.getenv("ZHIPU_API_KEY")
-        self.serp_api_key = os.getenv("SERP_API_KEY")
+        self.serp_api_key = next(iter(configured_keys()), "")
         self.zhipu_search_url = os.getenv(
             "TEXT_SEARCH_URL", "https://search-svip.bigmodel.cn/api/paas/v4/search"
         )
@@ -44,7 +46,7 @@ class SearchTool(DeepResearchTool):
         )
         self._gateway_user = os.getenv("API_GATEWAY_USER", "")
         self._gateway_key = os.getenv("API_GATEWAY_KEY", "")
-        self._use_gateway = bool(self._gateway_user and self._gateway_key)
+        self._use_gateway = bool(self._gateway_user and self._gateway_key) and not bool(os.getenv("SERPER_API_KEYS"))
 
     def contains_chinese(self, text: str) -> bool:
         """Check if text contains Chinese characters."""
@@ -203,7 +205,7 @@ Please install requests: pip install requests"""
                 }
 
             def send_request():
-                return requests.post(
+                return serper_post(
                     self.serp_search_url,
                     headers=headers,
                     data=json.dumps(payload, ensure_ascii=False),

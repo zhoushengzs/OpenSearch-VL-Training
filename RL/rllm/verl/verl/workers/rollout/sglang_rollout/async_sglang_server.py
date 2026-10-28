@@ -47,6 +47,12 @@ logger = logging.getLogger(__file__)
 logger.setLevel(logging.INFO)
 
 
+def _default_mm_attention_backend():
+    # Qwen3-VL passes FA3 from inside its model even when the server option
+    # is None. Override that default on non-Hopper GPUs, including Blackwell.
+    return "fa3" if torch.cuda.get_device_capability()[0] == 9 else "triton_attn"
+
+
 @ray.remote(num_cpus=1)
 class SGLangHttpServer:
     """SGLang http server in single node, this is equivalent to launch server with command line:
@@ -149,8 +155,9 @@ class SGLangHttpServer:
             "trust_remote_code": self.model_config.trust_remote_code,
             "max_running_requests": self.config.get("max_num_seqs", None),
             "log_level": "error",
-            "mm_attention_backend": "fa3",
-            "attention_backend": attention_backend if attention_backend is not None else "fa3",
+            # Select a supported vision backend; explicit overrides still win.
+            "mm_attention_backend": _default_mm_attention_backend(),
+            "attention_backend": attention_backend,
             "skip_tokenizer_init": self.config.skip_tokenizer_init,
             "skip_server_warmup": True,
             **engine_kwargs,

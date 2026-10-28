@@ -131,6 +131,7 @@ inspect.getargspec = _argspec
 
 try:
     import IPython
+    import IPython.core.oinspect
 except ImportError:
     IPython = None
 else:

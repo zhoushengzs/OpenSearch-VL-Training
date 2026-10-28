@@ -99,6 +99,9 @@ def api_gateway_chat(
     if temperature is not None:
         body["temperature"] = temperature
 
+    if os.getenv("JUDGE_THINKING") in ("enabled", "disabled"):
+        body["thinking"] = {"type": os.environ["JUDGE_THINKING"]}
+
     headers = {
         "Authorization": f"Bearer {_API_KEY}",
         "Content-Type": "application/json",

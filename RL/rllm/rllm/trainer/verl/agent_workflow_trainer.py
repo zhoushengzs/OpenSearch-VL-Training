@@ -150,6 +150,10 @@ class AgentWorkflowPPOTrainer(RayPPOTrainer):
         # load checkpoint before doing anything
         self._load_checkpoint()
 
+        if self.global_steps >= self.total_training_steps:
+            print("The checkpoint has already reached the requested training steps.", flush=True)
+            return
+
         # perform validation before training
         import time
 
@@ -178,10 +182,17 @@ class AgentWorkflowPPOTrainer(RayPPOTrainer):
         workflow_metrics = defaultdict(list)
         metrics = {}
         timing_raw = {}
+        last_saved_step = None
 
         for epoch in range(self.config.trainer.total_epochs):
             pprint(f"epoch {epoch}, step {self.global_steps} started")
             for batch_dict in self.train_dataloader:
+                validated_this_step = False
+                print(
+                    f"Training batch {self.global_steps}/{self.total_training_steps} started "
+                    f"(epoch {epoch + 1}/{self.config.trainer.total_epochs})",
+                    flush=True,
+                )
                 do_profile = (
                     self.global_steps in self.config.trainer.profile_steps
                     if self.config.trainer.get("profile_steps") is not None
@@ -570,6 +581,7 @@ class AgentWorkflowPPOTrainer(RayPPOTrainer):
                                     self.global_steps, mode="val", epoch=epoch
                                 )
                                 val_metrics: dict = self._validate_agent()
+                            validated_this_step = True
                             metrics.update(val_metrics)
 
                         if (
@@ -578,6 +590,7 @@ class AgentWorkflowPPOTrainer(RayPPOTrainer):
                         ):
                             with marked_timer("save_checkpoint", timing_raw, color="green"):
                                 self._save_checkpoint()
+                            last_saved_step = self.global_steps
 
                         # Visualize some sample trajectories
                         if len(batch) > 0:
@@ -650,18 +663,26 @@ class AgentWorkflowPPOTrainer(RayPPOTrainer):
                 metrics = {}
                 timing_raw = {}
 
-                self.global_steps += 1
-
                 if self.global_steps >= self.total_training_steps:
+                    # Save the actual final batch, including when it was filtered out.
+                    # A checkpoint records both the current model and data position.
+                    if (
+                        self.config.trainer.save_freq > 0
+                        and last_saved_step != self.global_steps
+                    ):
+                        self._save_checkpoint()
                     # perform validation after training
-                    if self.val_reward_fn is not None:
+                    if self.val_reward_fn is not None and not validated_this_step:
                         self.agent_execution_engine.set_training_step(
                             self.global_steps, mode="val", epoch=epoch
                         )
                         val_metrics = self._validate_agent()
                         pprint(f"Final validation metrics: {val_metrics}")
                         logger.log(data=val_metrics, step=self.global_steps)
+                    print(f"Training completed: {self.global_steps} batches.", flush=True)
                     return
+
+                self.global_steps += 1
 
     def _validate_agent(self):
         is_correct_lst = []

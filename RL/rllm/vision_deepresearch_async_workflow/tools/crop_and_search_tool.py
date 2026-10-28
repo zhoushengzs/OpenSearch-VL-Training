@@ -6,6 +6,8 @@ import random
 import re
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+from vision_deepresearch_async_workflow.tools.serper_keys import configured_keys, serper_post
+
 from vision_deepresearch_async_workflow.tools.shared import (
     DeepResearchTool,
     get_cache_async,
@@ -73,7 +75,7 @@ class CropAndSearchTool(DeepResearchTool):
         )
         self.zhipu_api_key = os.getenv("ZHIPU_API_KEY")
         self.jina_api_key = os.getenv("JINA_API_KEY")
-        self.serp_api_key = os.getenv("SERP_API_KEY")
+        self.serp_api_key = next(iter(configured_keys()), "")
         self.zhipu_image_search_url = os.getenv(
             "IMAGE_SEARCH_URL",
             "https://search-svip.bigmodel.cn/api/paas/v4/image_search",
@@ -90,7 +92,7 @@ class CropAndSearchTool(DeepResearchTool):
         # Polaris API Gateway
         self._gateway_user = os.getenv("API_GATEWAY_USER", "")
         self._gateway_key = os.getenv("API_GATEWAY_KEY", "")
-        self._use_gateway = bool(self._gateway_user and self._gateway_key)
+        self._use_gateway = bool(self._gateway_user and self._gateway_key) and not bool(os.getenv("SERPER_API_KEYS"))
 
         # Tencent COS (replaces Alibaba OSS)
         self._cos_region = os.getenv("COS_REGION", "")
@@ -114,13 +116,7 @@ class CropAndSearchTool(DeepResearchTool):
         self.image_crop_cache = os.getenv("IMAGE_CROP_CACHE", None)
         self._oss_bucket = None
 
-        try:
-            from vision_deepresearch_async_workflow.utils.api_gateway_client import (
-                is_api_gateway_configured,
-            )
-            self._use_gateway = is_api_gateway_configured()
-        except ImportError:
-            self._use_gateway = False
+        # Judge API availability does not imply a Serper proxy is configured.
         self._extract_model_marker = os.getenv(
             "EXTRACT_MODEL_MARKER", "api_openai_gpt-5.4-2026-03-05"
         )
@@ -386,7 +382,7 @@ class CropAndSearchTool(DeepResearchTool):
         proxies = self._get_requests_proxies()
 
         def make_search_request():
-            response = requests.post(
+            response = serper_post(
                 self.serp_image_search_url,
                 headers=headers,
                 json=payload,
