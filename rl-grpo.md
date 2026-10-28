@@ -10,16 +10,29 @@
 export GRPO_PROJECT_ROOT='/root/autodl-tmp/visual-search-agent'
 ```
 
-## 准备 GRPO 启动脚本
+## 从当前服务器下载代码
 
-从 GitHub 下载后，先把仓库自带的 `grpo/` 脚本复制到训练数据目录。`-n` 表示保留目的地已有的同名文件，避免覆盖服务器上的本地设置。
+使用服务器文件管理器下载以下三个目录，并在接收代码的机器上保持原来的目录关系：
 
-```bash
-mkdir -p "$GRPO_PROJECT_ROOT/datasets/grpo"
-cp -an "$GRPO_PROJECT_ROOT/train/OpenSearch-VL-Training/grpo/." "$GRPO_PROJECT_ROOT/datasets/grpo/"
+- `/root/autodl-tmp/visual-search-agent/train/OpenSearch-VL-Training/`：训练框架和安装说明。
+- `/root/autodl-tmp/visual-search-agent/datasets/grpo/scripts/`：数据准备、环境检查和训练启动脚本。
+- `/root/autodl-tmp/visual-search-agent/datasets/grpo/integration/`：训练接入代码和服务配置模板。
+
+下载后应保持下面的结构，其中最外层地址就是前面设置的 `GRPO_PROJECT_ROOT`：
+
+```text
+visual-search-agent/
+├── train/
+│   └── OpenSearch-VL-Training/
+└── datasets/
+    └── grpo/
+        ├── scripts/
+        └── integration/
 ```
 
-`grpo/` 只保存代码和空白配置模板。题目、图片、`audit/` 数据核对文件、模型和实际密钥需单独准备，仍使用原来的数据目录。
+服务器代码已经包含本次修复。保留上述目录结构后，直接按下面步骤安装环境、配置服务和训练即可。
+
+训练题目、图片和 `audit/` 数据核对文件需另行准备在 `datasets/grpo/` 下；模型需另行准备。实际服务密钥在第7步配置。只下载代码不会自动带上这些训练材料。
 
 ## 1. 进入 Conda 环境
 
